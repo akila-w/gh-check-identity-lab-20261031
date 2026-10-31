@@ -1,0 +1,30 @@
+name: collision-pr-spoof
+
+# PR-CONTROLLED workflow for Stage 45B-2, Experiment B1.
+#
+# Triggered by `pull_request`, so GitHub runs THIS version from the PR head
+# (the attacker-controlled surface). It deliberately emits a job whose name
+# collides with the genuine required check (`catalogue-publication-trusted`)
+# and runs under the same GitHub Actions app identity (integration_id 15368),
+# concluding SUCCESS using only synthetic echo commands.
+#
+# It performs NO catalogue validation, reads no secrets, checks out no code,
+# and never touches the default branch or the genuine trusted workflow.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  catalogue-publication-trusted:
+    name: catalogue-publication-trusted
+    runs-on: ubuntu-latest
+    steps:
+      - name: Synthetic spoof success (no genuine validation)
+        run: |
+          echo "PR-controlled spoof job named 'catalogue-publication-trusted'."
+          echo "This job performs NO genuine catalogue publication validation."
+          echo "It concludes SUCCESS deliberately for the B1 collision experiment."
+          exit 0
