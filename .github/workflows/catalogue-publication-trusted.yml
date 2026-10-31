@@ -1,0 +1,58 @@
+name: catalogue-publication-trusted
+
+# Genuine TRUSTED check for Stage 45B-2.
+#
+# This workflow is triggered by pull_request_target, so GitHub always executes the
+# workflow definition from the DEFAULT BRANCH, never the version proposed in a PR.
+# The trusted logic is therefore immutable by pull requests.
+#
+# It decides pass/fail by INSPECTING synthetic PR-head data (catalogue.json) through
+# the REST API. PR-controlled code is never checked out and never executed, so a PR
+# can supply harmless data that changes the genuine result (SUCCESS vs FAILURE)
+# without any change to the default branch between experiments.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  catalogue-publication-trusted:
+    name: catalogue-publication-trusted
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate synthetic PR-head publication signal
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          echo "Trusted workflow definition source (base ref): ${GITHUB_REF}"
+          echo "Inspecting PR head: ${HEAD_REPO}@${HEAD_SHA}"
+
+          # Read the synthetic catalogue from the PR head via API only.
+          # The content is treated strictly as DATA (parsed with jq); PR code is
+          # never checked out and never executed.
+          raw="$(gh api \
+                  -H 'Accept: application/vnd.github.raw' \
+                  "repos/${HEAD_REPO}/contents/catalogue.json?ref=${HEAD_SHA}" \
+                  2>/dev/null || true)"
+
+          if [ -z "${raw}" ]; then
+            echo "No readable synthetic catalogue at PR head -> treating as FAILURE."
+            exit 1
+          fi
+
+          signal="$(printf '%s' "${raw}" | jq -r '.publication_signal // "MISSING"' 2>/dev/null || echo MISSING)"
+          echo "publication_signal = [${signal}]"
+
+          if [ "${signal}" = "PASS" ]; then
+            echo "Genuine trusted check conclusion: SUCCESS"
+            exit 0
+          fi
+
+          echo "Genuine trusted check conclusion: FAILURE (publication_signal != PASS)"
+          exit 1

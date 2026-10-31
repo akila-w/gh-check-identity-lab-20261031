@@ -1,0 +1,12 @@
+{
+  "_comment": "Synthetic disposable catalogue for Stage 45B-2 identity-collision lab. No real VahanaIQ data.",
+  "publication_signal": "FAIL",
+  "items": [
+    {
+      "sku": "WIDGET-001",
+      "name": "Synthetic Demonstration Widget",
+      "price": 1.00,
+      "currency": "LKR"
+    }
+  ]
+}
