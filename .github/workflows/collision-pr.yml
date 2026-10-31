@@ -1,0 +1,35 @@
+name: collision-pr-b4
+
+# PR-CONTROLLED workflow for Stage 45B-2, Experiment B4.
+#
+# Triggered by `pull_request`, so GitHub runs THIS version from the PR head.
+# It declares a job whose reported name collides with the genuine required check
+# (`catalogue-publication-trusted`) under the same GitHub Actions app (15368) and
+# deliberately concludes SUCCESS using only static synthetic commands.
+#
+# B4 context: the genuine trusted workflow is TEMPORARILY DISABLED in the sandbox
+# at the time this PR is opened, so no genuine check-run is produced. This job is
+# therefore the ONLY intended source of a same-name `catalogue-publication-trusted`
+# check on the PR head. The experiment observes whether GitHub treats the required
+# check as satisfied (potential bypass) or missing (blocked).
+#
+# It reads no secrets, makes no network calls, checks out no code, uses no external
+# actions, and modifies no files.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  catalogue-publication-trusted:
+    name: catalogue-publication-trusted
+    runs-on: ubuntu-latest
+    steps:
+      - name: Synthetic spoof success (no genuine validation)
+        run: |
+          echo "PR-controlled spoof job named 'catalogue-publication-trusted' (B4)."
+          echo "Genuine trusted workflow is disabled; this is the only same-name check."
+          echo "Concluding SUCCESS deliberately for the B4 missing-genuine experiment."
+          exit 0
