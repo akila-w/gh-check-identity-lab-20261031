@@ -1,0 +1,33 @@
+name: collision-pr-skipped
+
+# PR-CONTROLLED workflow for Stage 45B-2, Experiment B2.
+#
+# Triggered by `pull_request`, so GitHub runs THIS version from the PR head.
+# It declares a job whose reported name collides with the genuine required check
+# (`catalogue-publication-trusted`) under the same GitHub Actions app (15368),
+# but the JOB is skipped via a deterministic job-level `if:` that evaluates to
+# false. The purpose is to observe how a SKIPPED same-name job's check-run is
+# conclusion-coded and whether it affects enforcement of the genuine failing
+# required check.
+#
+# This is a job-level skip (not a workflow-level path filter or skip directive),
+# because those have different required-check semantics.
+#
+# If it ran, the job would read no secrets, make no network calls, check out no
+# code, and modify no files — but the deterministic `if: ${{ false }}` means the
+# steps never execute.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  catalogue-publication-trusted:
+    name: catalogue-publication-trusted
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unreachable (job skipped by deterministic false conditional)
+        run: echo "This step never runs; the job is skipped by design."
